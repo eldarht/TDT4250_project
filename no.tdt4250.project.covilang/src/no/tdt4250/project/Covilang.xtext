@@ -1,0 +1,9 @@
+grammar no.tdt4250.project.Covilang with org.eclipse.xtext.common.Terminals
+
+generate covilang "http://www.tdt4250.no/project/Covilang"
+
+Model:
+	greetings+=Greeting*;
+	
+Greeting:
+	'Hello' name=ID '!';

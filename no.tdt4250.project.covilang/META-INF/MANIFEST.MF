@@ -1,0 +1,30 @@
+Manifest-Version: 1.0
+Automatic-Module-Name: no.tdt4250.project.covilang
+Bundle-ManifestVersion: 2
+Bundle-Name: no.tdt4250.project.covilang
+Bundle-Vendor: My Company
+Bundle-Version: 1.0.0.qualifier
+Bundle-SymbolicName: no.tdt4250.project.covilang; singleton:=true
+Bundle-ActivationPolicy: lazy
+Require-Bundle: org.eclipse.xtext,
+ org.eclipse.xtext.xbase,
+ org.eclipse.equinox.common;bundle-version="3.5.0",
+ org.eclipse.emf.ecore,
+ org.eclipse.xtext.xbase.lib;bundle-version="2.14.0",
+ org.eclipse.xtext.util,
+ org.eclipse.emf.common,
+ org.eclipse.xtend.lib;bundle-version="2.14.0",
+ org.antlr.runtime;bundle-version="[3.2.0,3.2.1)"
+Bundle-RequiredExecutionEnvironment: JavaSE-11
+Export-Package: no.tdt4250.project.serializer,
+ no.tdt4250.project,
+ no.tdt4250.project.services,
+ no.tdt4250.project.generator,
+ no.tdt4250.project.parser.antlr.internal,
+ no.tdt4250.project.covilang.util,
+ no.tdt4250.project.covilang,
+ no.tdt4250.project.parser.antlr,
+ no.tdt4250.project.validation,
+ no.tdt4250.project.covilang.impl,
+ no.tdt4250.project.scoping
+Import-Package: org.apache.log4j
