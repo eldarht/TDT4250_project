@@ -1,4 +1,4 @@
-module no.tdt4250.project.GenerateCovilang
+module no.tdt4250.project.GenerateAntlr
 
 import org.eclipse.xtext.xtext.generator.*
 import org.eclipse.xtext.xtext.generator.model.project.*
@@ -6,16 +6,11 @@ import org.eclipse.xtext.xtext.generator.model.project.*
 var rootPath = ".."
 
 Workflow {
-	bean= org.eclipse.emf.mwe.utils.StandaloneSetup{
-		scanClassPath = true
-		platformUri = ".."
-		registerGeneratedEPackage = "no.tdt4250.project.antlr.AntlrPackage"
-		registerGenModelFile = "file:/home/Flero/school/advancedSoftwareDesign/project/no.tdt4250.project.antlr/model/generated/Antlr.genmodel"
-	}
+	
 	component = XtextGenerator {
 		configuration = {
 			project = StandardProjectConfig {
-				baseName = "no.tdt4250.project.covilang"
+				baseName = "no.tdt4250.project.antlr"
 				rootPath = rootPath
 				runtimeTest = {
 					enabled = true
@@ -35,8 +30,8 @@ Workflow {
 			}
 		}
 		language = StandardLanguage {
-			name = "no.tdt4250.project.Covilang"
-			fileExtensions = "covi"
+			name = "no.tdt4250.project.Antlr"
+			fileExtensions = "g4"
 
 			serializer = {
 				generateStub = false

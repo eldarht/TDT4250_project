@@ -1,9 +1,25 @@
-grammar no.tdt4250.project.Covilang with org.eclipse.xtext.common.Terminals
+grammar no.tdt4250.project.Covilang with no.tdt4250.project.Antlr
 
-generate covilang "http://www.tdt4250.no/project/Covilang"
+import "http://www.tdt4250.no/project/Antlr" as Antlr
+generate covilang "http://www.tdt4250.no/project/Covilang" 
 
-Model:
-	greetings+=Greeting*;
+CoviFile
+	: from=StructureFrom to=StructureTo rule+=Rule*
+	;
+
+StructureFrom
+	: 'from' importURI=STRING
+	;
 	
-Greeting:
-	'Hello' name=ID '!';
+StructureTo
+	: 'to' importURI=STRING
+	| 'multi-paradigm' 'to' paradigm+=ParadigmInclude+
+	;
+	
+ParadigmInclude
+	: paradigm=ID importURI=STRING
+	;
+	
+Rule
+	: 'Test:' name=ID test=[Antlr::grammarDecl]
+	;

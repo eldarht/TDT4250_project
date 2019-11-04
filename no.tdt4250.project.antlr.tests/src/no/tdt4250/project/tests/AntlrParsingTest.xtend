@@ -4,7 +4,7 @@
 package no.tdt4250.project.tests
 
 import com.google.inject.Inject
-import no.tdt4250.project.covilang.CoviFile
+import no.tdt4250.project.antlr.Model
 import org.eclipse.xtext.testing.InjectWith
 import org.eclipse.xtext.testing.extensions.InjectionExtension
 import org.eclipse.xtext.testing.util.ParseHelper
@@ -13,10 +13,10 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.^extension.ExtendWith
 
 @ExtendWith(InjectionExtension)
-@InjectWith(CovilangInjectorProvider)
-class CovilangParsingTest {
+@InjectWith(AntlrInjectorProvider)
+class AntlrParsingTest {
 	@Inject
-	ParseHelper<CoviFile> parseHelper
+	ParseHelper<Model> parseHelper
 	
 	@Test
 	def void loadModel() {

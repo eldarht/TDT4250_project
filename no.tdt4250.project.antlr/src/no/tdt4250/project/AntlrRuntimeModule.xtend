@@ -3,9 +3,9 @@
  */
 package no.tdt4250.project
 
+
 /**
  * Use this class to register components to be used at runtime / without the Equinox extension registry.
  */
-class CovilangRuntimeModule extends AbstractCovilangRuntimeModule {
-	
+class AntlrRuntimeModule extends AbstractAntlrRuntimeModule {
 }

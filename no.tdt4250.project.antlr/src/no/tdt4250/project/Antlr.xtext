@@ -1,0 +1,16 @@
+grammar no.tdt4250.project.Antlr with org.eclipse.xtext.common.Terminals
+
+generate antlr "http://www.tdt4250.no/project/Antlr"
+
+/* Rewritten antlr grammar for xtext parsing based on https://github.com/antlr/grammars-v4/blob/master/antlr4/ANTLRv4Parser.g4 */
+grammarSpec
+   : ML_COMMENT* grammardec=grammarDecl
+   ;
+
+grammarDecl
+   : grammarType name=ID ';'
+   ;
+
+grammarType
+   : ('lexer' 'grammar' | 'parser' 'grammar' | 'grammar')
+   ;

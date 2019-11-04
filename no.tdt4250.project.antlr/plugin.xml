@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.0"?>
+<plugin>
+	<extension point="org.eclipse.emf.ecore.generated_package">
+		<package 
+			uri = "http://www.tdt4250.no/project/Antlr"
+			class = "no.tdt4250.project.antlr.AntlrPackage"
+			genModel = "model/generated/Antlr.genmodel" />
+	</extension>
+</plugin>
