@@ -3,14 +3,591 @@ grammar no.tdt4250.project.Antlr with org.eclipse.xtext.common.Terminals
 generate antlr "http://www.tdt4250.no/project/Antlr"
 
 /* Rewritten antlr grammar for xtext parsing based on https://github.com/antlr/grammars-v4/blob/master/antlr4/ANTLRv4Parser.g4 */
-grammarSpec
-   : ML_COMMENT* grammardec=grammarDecl
+GrammarSpec
+	: ML_COMMENT* name=GrammarDecl prequel+=PrequelConstruct ruleList=Rules mod+=ModeSpec* 
+	;
+
+GrammarDecl
+	: GrammarType ID SEMI
+	;
+
+GrammarType
+	: (LEXER GRAMMAR | PARSER GRAMMAR | GRAMMAR)
+	;
+
+PrequelConstruct
+   : OptionsSpec
+   | DelegateGrammars
+   | TokensSpec
+   | ChannelsSpec
+   | Action_
+   ;
+   // ------------
+   // Options - things that affect analysis and/or code generation
+
+OptionsSpec
+   : {OptionsSpec} OPTIONS '{' (option+=Option SEMI)* '}'
    ;
 
-grammarDecl
-   : grammarType name=ID ';'
+Option
+   : name=ID ASSIGN value=OptionValue
+   ;
+   
+
+OptionValue
+   : OptionID
+   | {OptionValue} STRING/*STRING_LITERAL*/
+   | {OptionValue} ACTION_BLOCK*
+   | {OptionValue} INT
+   ;
+   
+OptionID
+	: name+=ID ('.' name+=ID)*
+	;
+   // ------------
+   // Delegates
+
+DelegateGrammars
+   : IMPORT delegare+=DelegateGrammar (SEMI delegare+=DelegateGrammar)* SEMI
    ;
 
-grammarType
-   : ('lexer' 'grammar' | 'parser' 'grammar' | 'grammar')
+DelegateGrammar
+   : Identifier ASSIGN Identifier
+   | Identifier
+   ;
+   // ------------
+   // Tokens & Channels
+
+TokensSpec
+   : TOKENS '{' IdList? '}'
+   ;
+
+ChannelsSpec
+   : CHANNELS '{' IdList? '}'
+   ;
+
+IdList
+   : identifiers+=Identifier (COMMA identifiers+=Identifier)* COMMA?
+   ;
+   // Match stuff like @parser::members {int i;}
+
+Action_
+   : AT (ActionScopeName COLONCOLON)? Identifier ACTION_BLOCK
+   ;
+   // Scope names could collide with keywords; allow them as ids for action scopes
+
+ActionScopeName
+   : Identifier
+   | LEXER
+   | PARSER
+   ;
+
+
+ArgActionBlock
+   : '{' /*BEGIN_ARGUMENT*/ body+=ANY_OTHER/*ARGUMENT_CONTENT**/ '}' /*END_ARGUMENT*/
+   ;
+
+ModeSpec
+   : {ModeSpec} MODE Identifier SEMI lexerRule+=LexerRuleSpec*
+   ;
+
+Rules
+   : {Rules} specs+=RuleSpec*
+   ;
+
+RuleSpec
+   : => ParserRuleSpec
+   | LexerRuleSpec
+   ;
+
+ParserRuleSpec
+   : ML_COMMENT* RuleModifiers? name=ID/*RULE_REF*/ argAction=ArgActionBlock? ruleReturn=RuleReturns? throw=ThrowsSpec? local=LocalsSpec? rulePrequel+=RulePrequel* COLON rule=RuleBlock SEMI exept=ExceptionGroup
+   ;
+
+ExceptionGroup
+   : {ExceptionGroup} except+=ExceptionHandler* finally=FinallyClause?
+   ;
+
+ExceptionHandler
+   : CATCH argAction=ArgActionBlock ACTION_BLOCK
+   ;
+
+FinallyClause
+   : FINALLY ACTION_BLOCK
+   ;
+
+RulePrequel
+   : OptionsSpec
+   | {RulePrequel} RuleAction
+   ;
+
+RuleReturns
+   : RETURNS ArgActionBlock
+   ;
+   // --------------
+   // Exception spec
+
+ThrowsSpec
+   : THROWS throws+=Identifier (COMMA throws+=Identifier)*
+   ;
+
+LocalsSpec
+   : LOCALS ArgActionBlock
+   ;
+
+/** Match stuff like @init {int i;} */ RuleAction
+   : AT Identifier ACTION_BLOCK
+   ;
+
+RuleModifiers
+   : RuleModifier+
+   ;
+   // An individual access modifier for a rule. The 'fragment' modifier
+   // is an internal indication for lexer rules that they do not match
+   // from the input but are like subroutines for other lexer rules to
+   // reuse for certain lexical patterns. The other modifiers are passed
+   // to the code generation templates and may be ignored by the template
+   // if they are of no use in that language.
+
+RuleModifier
+   : PUBLIC
+   | PRIVATE
+   | PROTECTED
+   | FRAGMENT
+   ;
+
+RuleBlock
+   : rules=RuleAltList
+   ;
+
+RuleAltList
+   : label+=LabeledAlt (OR label+=LabeledAlt)*
+   ;
+
+LabeledAlt
+   : Alternative (POUND Identifier)?
+   ;
+   // --------------------
+   // Lexer rules
+
+LexerRuleSpec
+   : ML_COMMENT* FRAGMENT? name=ID/*TOKEN_REF*/ COLON LexerRuleBlock SEMI
+   ;
+
+LexerRuleBlock
+   : LexerAltList
+   ;
+
+LexerAltList
+   : alt+=LexerAlt (OR alt+=LexerAlt)*
+   ;
+
+LexerAlt
+   : element=LexerElements command=LexerCommands?
+   ;
+
+LexerElements
+   : element+=LexerElement+
+   ;
+
+LexerElement
+   : LabeledLexerElement EbnfSuffix?
+   | LexerAtom EbnfSuffix?
+   | LexerBlock EbnfSuffix?
+   | {LexerElement} ACTION_BLOCK QUESTION?
+   ;
+   // but preds can be anywhere
+
+LabeledLexerElement
+   : Identifier (ASSIGN | PLUS_ASSIGN) value=(LexerAtom | LexerBlock)
+   ;
+
+LexerBlock
+   : LPAREN LexerAltList RPAREN
+   ;
+   // E.g., channel(HIDDEN), skip, more, mode(INSIDE), push(INSIDE), pop
+
+LexerCommands
+   : RARROW command+=LexerCommand (COMMA command+=LexerCommand)*
+   ;
+
+LexerCommand
+   : LexerCommandName LPAREN LexerCommandExpr RPAREN
+   | LexerCommandName
+   ;
+
+LexerCommandName
+   : Identifier
+   | MODE
+   ;
+
+LexerCommandExpr
+   : Identifier
+   | INT
+   ;
+   // --------------------
+   // Rule Alts
+
+AltList
+   : alt+=Alternative (OR alt+=Alternative)*
+   ;
+
+Alternative
+   : ElementOptions? element+=Element+
+   ;
+ 
+Element
+   : LabeledElement EbnfSuffix
+   | Atom EbnfSuffix
+   | Ebnf
+   | {Element} ACTION_BLOCK QUESTION?
+   ;
+
+LabeledElement
+   : Identifier (ASSIGN | PLUS_ASSIGN) value=(Atom | Block)
+   ;
+   // --------------------
+   // EBNF and blocks
+
+Ebnf
+   : Block BlockSuffix?
+   ;
+
+BlockSuffix
+   : EbnfSuffix
+   ;
+
+EbnfSuffix
+   : QUESTION QUESTION?
+   | STAR QUESTION?
+   | PLUS QUESTION?
+   ;
+
+LexerAtom
+   : {LexerAtom} CharacterRange
+   | Terminal
+   | NotSet
+//   | ID/*LEXER_CHAR_SET*/
+   | {LexerAtom} '.' elements=ElementOptions?
+   ;
+
+Atom
+   : Terminal
+//   | Ruleref
+   | NotSet
+   | {Atom} '.' el=ElementOptions?
+   ;
+   // --------------------
+   // Inverted element set
+
+NotSet
+   : NOT SetElement
+   | NOT BlockSet
+   ;
+
+BlockSet
+   : LPAREN element+=SetElement (OR element+=SetElement)* RPAREN
+   ;
+
+SetElement
+   : {SetElement} ID/*TOKEN_REF*/ ElementOptions?
+   | {SetElement} STRING/*STRING_LITERAL*/ ElementOptions?
+   | {SetElement} CharacterRange
+//   | ID/*LEXER_CHAR_SET*/
+   ;
+   // -------------
+   // Grammar Block
+
+Block
+   : LPAREN (option=OptionsSpec? rule+=RuleAction* COLON)? alts=AltList RPAREN
+   ;
+   // ----------------
+   // Parser rule ref
+
+Ruleref
+   : ID/*RULE_REF*/ argAction=ArgActionBlock? elementOption=ElementOptions?
+   ;
+   // ---------------
+   // Character Range
+
+CharacterRange
+   : STRING/*STRING_LITERAL*/ RANGE STRING/*STRING_LITERAL*/
+   ;
+
+Terminal
+   : name=ID/*TOKEN_REF*/ el=ElementOptions?
+   | name=STRING/*STRING_LITERAL*/ el=ElementOptions?
+   ;
+   // Terminals may be adorned with certain options when
+   // reference in the grammar: TOK<,,,>
+
+ElementOptions
+   : LT element+=ElementOption (COMMA element+=ElementOption)* GT
+   ;
+
+ElementOption
+   : name=Identifier
+   | name=Identifier ASSIGN (Identifier | STRING/*STRING_LITERAL*/)
+   ;
+
+Identifier
+   : ID/*RULE_REF*/
+//   | TOKEN_REF
+   ;
+
+/* Based on the lexer at https://github.com/antlr/grammars-v4/blob/master/antlr4/ANTLRv4Lexer.g4 */
+
+   // -------------------------
+   // Literal string
+   //
+   // ANTLR makes no distinction between a single character literal and a
+   // multi-character string. All literals are single quote delimited and
+   // may contain unicode escape sequences of the form \uxxxx, where x
+   // is a valid hexadecimal number (per Unicode standard).
+/*
+terminal STRING_LITERAL
+   : STRING
+   ;
+ */
+   // -------------------------
+   // Arguments
+   //
+   // Certain argument lists, such as those specifying call parameters
+   // to a rule invocation, or input parameters to a rule specification
+   // are contained within square brackets.
+/*
+terminal BEGIN_ARGUMENT
+   : '{'
+   //{ handleBeginArgument(); }
+   ;
+   // -------------------------
+   // Actions
+
+terminal BEGIN_ACTION
+   : '{' //-> pushMode (Action)
+   ;
+   */
+   // -------------------------
+   // Keywords
+   //
+   // Keywords may not be used as labels for rules or in any other context where
+   // they would be ambiguous with the keyword vs some other identifier.  OPTIONS,
+   // TOKENS, & CHANNELS blocks are handled idiomatically in dedicated lexical modes.
+
+terminal OPTIONS
+   : 'options' 
+   ;
+
+terminal TOKENS
+   : 'tokens'
+   ;
+
+terminal CHANNELS
+   : 'channels' 
+   ;
+
+terminal IMPORT
+   : 'import'
+   ;
+
+terminal FRAGMENT
+   : 'fragment'
+   ;
+
+terminal LEXER
+   : 'lexer'
+   ;
+
+terminal PARSER
+   : 'parser'
+   ;
+
+terminal GRAMMAR
+   : 'grammar'
+   ;
+
+terminal PROTECTED
+   : 'protected'
+   ;
+
+terminal PUBLIC
+   : 'public'
+   ;
+
+terminal PRIVATE
+   : 'private'
+   ;
+
+terminal RETURNS
+   : 'returns'
+   ;
+
+terminal LOCALS
+   : 'locals'
+   ;
+
+terminal THROWS
+   : 'throws'
+   ;
+
+terminal CATCH
+   : 'catch'
+   ;
+
+terminal FINALLY
+   : 'finally'
+   ;
+
+terminal MODE
+   : 'mode'
+   ;
+   // -------------------------
+   // Punctuation
+
+terminal COLON
+   : ':'
+   ;
+
+terminal COLONCOLON
+   : '::'
+   ;
+
+terminal COMMA
+   : ','
+   ;
+
+terminal SEMI
+   : ';'
+   ;
+
+terminal LPAREN
+   : '('
+   ;
+
+terminal RPAREN
+   : ')'
+   ;
+
+terminal RARROW
+   : '->'
+   ;
+
+terminal LT
+   : '<'
+   ;
+
+terminal GT
+   : '>'
+   ;
+
+terminal ASSIGN
+   : '='
+   ;
+
+terminal QUESTION
+   : '?'
+   ;
+
+terminal STAR
+   : '*'
+   ;
+
+terminal PLUS_ASSIGN
+   : '+='
+   ;
+
+terminal PLUS
+   : '+'
+   ;
+
+terminal OR
+   : '|'
+   ;
+
+terminal DOLLAR
+   : '$'
+   ;
+
+terminal RANGE
+   : '..'
+   ;
+
+terminal AT
+   : '@'
+   ;
+
+terminal POUND
+   : '#'
+   ;
+
+terminal NOT
+   : '~'
+   ;
+   // -------------------------
+   // Identifiers - allows unicode rule/token names
+
+   // -------------------------
+   // Whitespace
+
+/*ERRCHAR
+   : . -> channel (HIDDEN)
+   ;*/
+   // ======================================================
+   // Lexer modes
+   // -------------------------
+   // Arguments
+
+//mode Argument;
+// E.g., [int x, List<String> a[]]
+
+
+
+
+/*
+terminal END_ARGUMENT
+   : '}'
+   //{ handleEndArgument(); }
+   ;*/
+   // added this to return non-EOF token type here. EOF does something weird 
+/*terminal ARGUMENT_CONTENT
+   : ANY_OTHER
+   ;*/
+   // -------------------------
+   // Actions
+   //
+   // Many language targets use {} as block delimiters and so we
+   // must recursively match {} delimited blocks to balance the
+   // braces. Additionally, we must make some assumptions about
+   // literal string representation in the target language. We assume
+   // that they are delimited by ' or " and so consume these
+   // in their own alts so as not to inadvertantly match {}.
+
+/*
+terminal END_ACTION
+   : '}'
+   //{ handleEndAction(); }
+   ;
+ */
+
+/*
+terminal ACTION_CONTENT
+   : .
+   ;
+ */
+/*
+terminal RULE_REF
+	: ID
+	;
+	
+terminal TOKEN_REF
+	: ID
+	;
+	
+terminal LEXER_CHAR_SET
+	: ID
+	;
+*/
+
+terminal ACTION_BLOCK
+   : '{' /*BEGIN_ACTION*/ -> '}' /*END_ACTION*/
    ;

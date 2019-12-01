@@ -24,3 +24,16 @@ It will atempt to use antlr, xtext, acceleo and java to create a [DSL](https://e
 The reason for doing this is mainly to learn more in-depth use of xtext and antlr. It will help me understand DSL's better and use of acceleo as a template framework and OCL.
 
 Although the the limited time on this project will not allow for a complete solution. If the project is taken further it could help with simplifying programming languages for applications that parses languages to extract information related to paradigmes.
+
+## Notes for the teacher
+
+I had quite a few problems that meant i did not get far in the allocated time.
+**EvaluationString**: The thought was to use text with enbeded code to describe the transaltion from one language to an other, similar to accelleo. It seems like this might require pushMode from antlr that does not exist in xtext. for example:
+```
+```FOR i := $$ cpp.i.value $$ TO bound```
+```
+where the contents of between $$ should be evaluated and returned as a string or be valid java to evaluate. FOR I, is plain text that should not be evaluated but must conform to the grammar.
+
+**ScopeProviders**: Currently the xtext language can refer to rules in the antlr grammar, but does not resolve to a type that could further be used as scopes. the links you provided were helpfull (https://stackoverflow.com/questions/17846444/xtext-refering-objects-from-other-languages-namespaces-and-aliases-for-importu, https://stackoverflow.com/questions/50861589/how-to-implement-imports-within-an-xtext-grammar ), but it proved difficult, and i decided to forcus on other aspects ot the project.
+
+**Rule names**: 

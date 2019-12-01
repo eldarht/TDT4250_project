@@ -4,22 +4,68 @@ import "http://www.tdt4250.no/project/Antlr" as Antlr
 generate covilang "http://www.tdt4250.no/project/Covilang" 
 
 CoviFile
-	: from=StructureFrom to=StructureTo rule+=Rule*
+	: from=StructureFrom to=StructureTo SEMI Converter+=ConverterSpecifications*
 	;
 
 StructureFrom
-	: 'from' importURI=STRING
+	: 'from' importURI=STRING 	
 	;
-	
+
 StructureTo
-	: 'to' importURI=STRING
-	| 'multi-paradigm' 'to' paradigm+=ParadigmInclude+
+	: 'to' paradigm+=ParadigmInclude
+	| 'multi-paradigm' 'to' paradigm+=ParadigmInclude (COMMA paradigm+=ParadigmInclude)
 	;
-	
+
 ParadigmInclude
-	: paradigm=ID importURI=STRING
+	: importURI=STRING
 	;
 	
-Rule
-	: 'Test:' name=ID test=[Antlr::grammarDecl]
+ConverterSpecifications
+	: 'converter' from=RuleSpecIdentifier RARROW to=RuleSpecIdentifier exprBody=ConverterBody
 	;
+
+ConverterBody
+	: COLON 'map' map=VariableMap? writer=TargetWriter SEMI
+	;
+
+TargetWriter
+	: 'targetWriter' COLON body=EvaluationString SEMI
+	;
+
+EvaluationString
+	: EVALUATION_STRING_BEGIN_END statement+=EvaluatorORString* EVALUATION_STRING_BEGIN_END
+	;
+
+EvaluatorORString
+	: Evaluation
+	| ANY_OTHER
+	;
+
+Evaluation
+	: EVALUATION_BEGIN_END body+=ANY_OTHER* EVALUATION_BEGIN_END
+	;
+	
+VariableMap
+	: COLON mapping+=MapPair (COMMA mapping+=MapPair)* SEMI
+	;
+
+MapPair
+	: from=[Antlr::Terminal |QualifiedName] RARROW to=ID
+	;
+
+QualifiedName
+	: ID ('.' ID)*
+	;
+RuleSpecIdentifier
+	: test=[Antlr::ParserRuleSpec | QualifiedName]
+	;
+	
+terminal EVALUATION_STRING_BEGIN_END
+	:'```'
+	;
+	
+terminal EVALUATION_BEGIN_END
+	:'$$'
+	;
+	
+	
